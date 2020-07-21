@@ -14,7 +14,7 @@ def make_dirs(param, root=None):
 
     dirs = Dirs()
     if root is None:
-        dirs.root = os.getcwd()
+        dirs.root = "/content/drive/My Drive"
     else:
         dirs.root = root
 

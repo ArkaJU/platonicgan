@@ -72,7 +72,7 @@ class TrainerPlatonic(Trainer):
         self.g_optimizer.step()
 
         ### log
-        print("  Generator loss 2d: {:2.4}".format(g_loss))
+        #print("  Generator loss 2d: {:2.4}".format(g_loss))
         self.logger.log_scalar('g_2d_loss', g_loss.item())
         self.logger.log_scalar('g_2d_rec_loss', data_loss.item())
         self.logger.log_volumes('volume', fake_volume)
@@ -108,10 +108,10 @@ class TrainerPlatonic(Trainer):
         if d_accuracy <= self.param.training.d_thresh or self.param.training.loss == 'wgangp':
             d_loss.backward()
             self.d_optimizer.step()
-            print("  *Discriminator 2d update*")
+            #print("  *Discriminator 2d update*")
 
         ### log
-        print("  Discriminator2d loss: {:2.4}".format(d_loss))
+        #print("  Discriminator2d loss: {:2.4}".format(d_loss))
         self.logger.log_scalar('d_2d_loss', d_loss.item())
         self.logger.log_scalar('d_2d_real', torch.mean(d_real).item())
         self.logger.log_scalar('d_2d_fake', torch.mean(torch.stack(d_fakes)).item())

@@ -7,8 +7,8 @@ data:
   use_n_samples_3d: -1
 device: cuda
 logger:
-  log_scalars_every: 100
-  log_files_every: 500
+  log_scalars_every: 10
+  log_files_every: 50
   log_gradients: True
   log_raw: True
   log_slices: True
