@@ -56,11 +56,17 @@ class Discriminator(nn.Module):
         return nn.Conv2d(n_features_in, n_features_out, kernel, stride, padding), nn.BatchNorm2d(n_features_out)
 
     def forward(self, input):
+        print(input.shape)
         x_f1 = F.leaky_relu(self.bn1(self.conv1(input)), 0.2)
+        print(x_f1.shape)
         x = F.leaky_relu(self.bn2(self.conv2(x_f1)), 0.2)
+        print(x.shape)
         x = F.leaky_relu(self.bn3(self.conv3(x)), 0.2)
+        print(x.shape)
         x_f2 = F.leaky_relu(self.bn4(self.conv4(x)), 0.2)
+        print(x_f2.shape)
         x = self.conv5(x_f2)
+        print(x.shape)
 
         return x, [x_f1, x_f2]
 
@@ -102,7 +108,7 @@ class Encoder(nn.Module):
         self.n_channel = param.data.n_channel_in
         self.batch_size = param.training.batch_size
         self.cube_len = param.data.cube_len
-
+        
         self.conv1 = nn.Conv2d(self.n_channel, self.n_features_min, 4, 2, 1)
         self.bn1 = nn.BatchNorm2d(self.n_features_min)
 
@@ -121,12 +127,21 @@ class Encoder(nn.Module):
         self.fc = nn.Linear(self.n_features_min * 16, self.z_size)
 
     def forward(self, input):
+        #print("ENCODER")
         batch_size = input.size(0)
+        #print(f"input.shape: {input.shape}")
         layer1 = F.leaky_relu(self.bn1(self.conv1(input)), 0.2)
+        #print(f"layer1.shape: {layer1.shape}")
         layer2 = F.leaky_relu(self.bn2(self.conv2(layer1)), 0.2)
+        #print(f"layer2.shape: {layer2.shape}")
         layer3 = F.leaky_relu(self.bn3(self.conv3(layer2)), 0.2)
+        #print(f"layer3.shape: {layer3.shape}")
         layer4 = F.leaky_relu(self.bn4(self.conv4(layer3)), 0.2)
+        #print(f"layer4.shape: {layer4.shape}")
         layer5 = F.leaky_relu(self.bn5(self.conv5(layer4)), 0.2)
+        #print(f"layer5.shape: {layer5.shape}")
         layer6 = layer5.view(batch_size, self.n_features_min * 16)
+        #print(f"layer6.shape: {layer6.shape}")
         layer6 = self.fc(layer6)
+        #print(f"layer6.shape: {layer6.shape}")
         return layer6

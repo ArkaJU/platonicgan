@@ -35,25 +35,17 @@ def volume_to_raw(volume, path, name, save_info=True):
 def read_image(image_path, resolution=None):
     # load image
 
-    image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    image = cv2.imread(image_path, 0)
     image = utils.normalize(image)
+    #print(f'image.ndim: {image.ndim}')
 
-    if image.ndim == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+    assert image.ndim == 2  #grayscale
 
-    if image.ndim == 2:
-        image = image[..., np.newaxis]
-
-    for channel in range(image.shape[2]):
-        image[..., channel] = ndimage.filters.gaussian_filter(image[..., channel], 1, truncate=2.0)
+    # for channel in range(image.shape[2]):
+    #     image[..., channel] = ndimage.filters.gaussian_filter(image[..., channel], 1, truncate=2.0)
 
     if resolution is not None:
         image = cv2.resize(image, (resolution, resolution), cv2.INTER_CUBIC).astype(np.float32)
-
-    if image.ndim == 2:
-        image = image[..., np.newaxis]
-
-    image = np.transpose(image, (2, 0, 1))
 
     return image
 

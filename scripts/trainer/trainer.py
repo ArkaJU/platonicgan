@@ -19,8 +19,8 @@ class Trainer(object):
 
         if init:
             self.datal_loader_train, self.dataset_train = self.setup_dataset('train')
-            self.data_loader_val, self.dataset_val = self.setup_dataset('val')
-            self.data_loader_test, self.dataset_test = self.setup_dataset('test')
+            #self.data_loader_val, self.dataset_val = self.setup_dataset('val')
+            #self.data_loader_test, self.dataset_test = self.setup_dataset('test')
 
             self.models = self.setup_models()
             self.encoder = self.models[0]
@@ -39,17 +39,21 @@ class Trainer(object):
                 self.logger = log.Logger(dirs, param, self.renderer, self.transform, self.models, self.optimizers)
                 self.gan_loss = GANLoss(param, param.training.loss)
                 self.criterion_data_term = torch.nn.MSELoss()
+                self.reconstruction_loss = torch.nn.MSELoss()  #new
 
                 self.dirs = dirs
 
     def encoder_train(self, x):
         self.encoder.train()
-        z_list = self.encoder(x)
-        print(f'encoder_train: {z_list}')
-        return z_list
+        z = self.encoder(x)
+        #print(f'encoder_train: {z_list.shape}')
+        return z
 
     def set_iteration(self, iteration):
         self.iteration = iteration
+    
+    def _compute_reconstruction_loss(self, fake, real):  #new
+        return self.reconstruction_loss(fake, real) 
 
     def _compute_adversarial_loss(self, output, target, weight):
         return self.gan_loss(output, target) * weight
@@ -95,9 +99,10 @@ class Trainer(object):
         dataset_type = dataset_dict[self.param.data.name]
         dataset = dataset_type(self.param, type)
 
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.param.training.batch_size, shuffle=True, num_workers=self.param.n_workers, drop_last=True)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.param.training.batch_size, shuffle=False, num_workers=self.param.n_workers, drop_last=False)
 
         dataset_len = dataset.__len__()
+        print(f'dataset_len: {dataset_len}')
         if dataset_len == 0 or dataset_len < self.param.n_workers or dataset_len < self.param.training.batch_size:
             print("Dataset ({}) does not contain enough samples".format(self.param.data.path_dir))
             exit(1)

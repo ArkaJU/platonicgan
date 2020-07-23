@@ -14,7 +14,7 @@ def make_dirs(param, root=None):
 
     dirs = Dirs()
     if root is None:
-        dirs.root = "/content/platonicgan"
+        dirs.root = "/content/drive/My Drive"
     else:
         dirs.root = root
 
@@ -75,7 +75,7 @@ def load_config(config_path='scripts/configs/default_config.yaml'):
     torch.cuda.manual_seed_all(seed)
 
     if config['renderer']['type'] == 'emission_absorption':
-        config['data']['n_channel_in'] = 4
+        config['data']['n_channel_in'] = 5  #changed
         config['data']['n_channel_out_3d'] = 4
         config['data']['n_channel_out_2d'] = 4
     if config['renderer']['type'] == 'absorption_only' or config['renderer']['type'] == 'visual_hull':

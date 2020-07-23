@@ -1,10 +1,11 @@
 data:
   cube_len: 64
-  name: image # shapenet | image | ucb
-  path_dir: datasets/thermal
+  name: custom # custom | image | ucb
+  path_dir: datasets/thermal_folderwise
   use_classes: ['thermal']
   use_n_samples_2d: -1
   use_n_samples_3d: -1
+
 device: cuda
 logger:
   log_scalars_every: 10
@@ -36,7 +37,7 @@ tests:
 training:
   adversarial_term_lambda_2d: 1.0
   adversarial_term_lambda_3d: 0.0
-  batch_size: 8
+  batch_size: 2
   d_thresh: 0.6
   data_term_lambda_2d: 8.0
   data_term_lambda_3d: 0.0

@@ -17,34 +17,32 @@ elif param.mode == 'platonic_3D':
 elif param.mode == '3D':
     trainer = Trainer3D(param, dirs)
 
-if param.tests.activate:
-    run_tests(trainer)
+# if param.tests.activate:
+#     run_tests(trainer)
 
 print('[Training] training start:')
 
 for epoch in range(1, param.training.n_epochs + 1):
     start_time = time.time()
 
-    for idx, (image, volume, vector, base_path, object_id, view_index, class_name) in enumerate(trainer.datal_loader_train):
+    for idx, (images, object_id) in enumerate(trainer.datal_loader_train):
         if trainer.logger.iteration%50==0:
           print("[iter {} name: {} mode: {} IF: {}]".format(trainer.logger.iteration, param.name, param.mode, param.renderer.type))
-
-        image = image.to(param.device)
+        print(f'train: {idx}')
+        images = images.to(param.device)
         volume = volume.to(param.device)
-
-        # if param.task == 'generation':
-        #     z = utils.generate_z(param, param.training.z_size)
-        # else:
-        #     z = trainer.encoder_train(image)
-        z_list = trainer.encoder_train(image)
-
-        trainer.generator_train(image, volume, z_list)
-        trainer.discriminator_train(image, volume, z_list)
-
+        
+        z = trainer.encoder_train(images)
+        print("#"*100)
+        trainer.generator_train(images, z)
+        print("$"*100)
+        # trainer.discriminator_train(image, volume, z)
+        # print("%"*100)
         trainer.logger.log_checkpoint(trainer.models, trainer.optimizers)
         for model in trainer.models:
             trainer.logger.log_gradients(model)
 
         trainer.logger.step()
-
+        print("^"*100)
+        print()
 print('Training finished!...')

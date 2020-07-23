@@ -16,57 +16,52 @@ class TrainerPlatonic(Trainer):
 
         self.d_optimizer = None
 
-        if init:
-            self.discriminator = self.discriminator_2d
-            if not test:
-                self.d_optimizer = self.d_optimizer_2d
+        # if init:
+        #     self.discriminator = self.discriminator_2d
+        #     if not test:
+        #         self.d_optimizer = self.d_optimizer_2d
 
-    def process_views(self, volume, image_real, target):
+    def process_views(self, volume, image_real):
 
-        views = []
+        fakes = []
         losses = []
-        d_fakes = []
-        gradient_penalties = []
 
-        n_views = self.param.training.n_views
+        n_views = 5
 
-        if self.param.task == 'reconstruction':
-            n_views += 1
+        #need to ensure the correspondence
+        if n_views==5:
+          rotation_angles = [-np.pi/2, -np.pi/4, 0, np.pi/4, np.pi/2]   #in radians
+
+        elif n_views==3:
+          rotation_angles = [-np.pi/2,  0,  np.pi/2]   #in radians
 
         for idx in range(n_views):
-            if idx == 0 and self.param.task == 'reconstruction':
-                view = self.renderer.render(volume)
-            else:
-                view = self.renderer.render(self.transform.rotate_random(volume))
-            d_fake, _ = self.discriminator(view)
-            loss = self._compute_adversarial_loss(d_fake, target, self.param.training.adversarial_term_lambda_2d)
-            gp = self.gan_loss.gradient_penalty(image_real, view, self.discriminator)
-            self.d_optimizer.zero_grad()
+          #not implemented yet
+          rotation_angle = rotation_angles[idx]
+          real = image_real[idx]
+          fake = self.renderer.render(self.transform.rotate_by_angle(volume, rotation_angle))
+          
+          loss = self._compute_reconstruction_loss(fake, real)
 
-            self.logger.log_images('{}_{}'.format('view_output', idx), view)
+          self.logger.log_images('{}_{}'.format('view_output', idx), fake)
 
-            views.append(view)
-            losses.append(loss)
-            gradient_penalties.append(gp)
-            d_fakes.append(d_fake)
+          fakes.append(fake)
+          losses.append(loss)
 
-        return views, d_fakes, losses, gradient_penalties
+        return fakes, losses
 
-    def generator_train(self, image, volume, z_list):
+    def generator_train(self, images, z):
         self.generator.train()
         self.g_optimizer.zero_grad()
 
         data_loss = torch.tensor(0.0).to(self.param.device)
 
-        fake_volume = self.generator(z_list)
+        fake_volume = self.generator(z)
+        print(images.shape)
+    
+        fakes, losses = self.process_views(fake_volume, images)
 
-        if self.param.task == 'reconstruction':
-            fake_front = self.renderer.render(fake_volume)
-            data_loss += self._compute_data_term_loss(fake_front, image, self.param.training.data_term_lambda_2d)
-
-        view, _, losses, _ = self.process_views(fake_volume, image, 1)
-
-        g_loss = torch.mean(torch.stack(losses)) + data_loss
+        g_loss = torch.mean(torch.stack(losses))
 
         g_loss.backward()
         self.g_optimizer.step()
@@ -74,11 +69,13 @@ class TrainerPlatonic(Trainer):
         ### log
         #print("  Generator loss 2d: {:2.4}".format(g_loss))
         self.logger.log_scalar('g_2d_loss', g_loss.item())
-        self.logger.log_scalar('g_2d_rec_loss', data_loss.item())
+        #self.logger.log_scalar('g_2d_rec_loss', data_loss.item())
         self.logger.log_volumes('volume', fake_volume)
-        self.logger.log_images('image_input', image)
 
-    def discriminator_train(self, image, volume, z_list):
+        for i in range(len(images)):
+          self.logger.log_images(f'image_input_{i}', images[i])
+
+    def discriminator_train(self, image, volume, z):
         self.discriminator.train()
         self.d_optimizer.zero_grad()
 
@@ -86,7 +83,7 @@ class TrainerPlatonic(Trainer):
         d_real_loss = self._compute_adversarial_loss(d_real, 1, self.param.training.adversarial_term_lambda_2d)
 
         with torch.no_grad():
-            fake_volume = self.generator(z_list)
+            fake_volume = self.generator(z)
 
         view, d_fakes, losses, gradient_penalties = self.process_views(fake_volume, image, 0)
 
