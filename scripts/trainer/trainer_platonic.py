@@ -52,13 +52,13 @@ class TrainerPlatonic(Trainer):
 
         return views, d_fakes, losses, gradient_penalties
 
-    def generator_train(self, image, volume, z):
+    def generator_train(self, image, volume, z_list):
         self.generator.train()
         self.g_optimizer.zero_grad()
 
         data_loss = torch.tensor(0.0).to(self.param.device)
 
-        fake_volume = self.generator(z)
+        fake_volume = self.generator(z_list)
 
         if self.param.task == 'reconstruction':
             fake_front = self.renderer.render(fake_volume)
@@ -78,7 +78,7 @@ class TrainerPlatonic(Trainer):
         self.logger.log_volumes('volume', fake_volume)
         self.logger.log_images('image_input', image)
 
-    def discriminator_train(self, image, volume, z):
+    def discriminator_train(self, image, volume, z_list):
         self.discriminator.train()
         self.d_optimizer.zero_grad()
 
@@ -86,7 +86,7 @@ class TrainerPlatonic(Trainer):
         d_real_loss = self._compute_adversarial_loss(d_real, 1, self.param.training.adversarial_term_lambda_2d)
 
         with torch.no_grad():
-            fake_volume = self.generator(z)
+            fake_volume = self.generator(z_list)
 
         view, d_fakes, losses, gradient_penalties = self.process_views(fake_volume, image, 0)
 

@@ -44,9 +44,9 @@ class Trainer(object):
 
     def encoder_train(self, x):
         self.encoder.train()
-        z = self.encoder(x)
-
-        return z
+        z_list = self.encoder(x)
+        print(f'encoder_train: {z_list}')
+        return z_list
 
     def set_iteration(self, iteration):
         self.iteration = iteration

@@ -1,9 +1,10 @@
-from scripts.models import resnet, default
+from scripts.models import resnet, default, vnet
 
 # add different models here
 
 generator_dict = {
-    'default': default.Generator
+    'default': default.Generator,
+    'vnet': vnet.VNet_Generator
 }
 
 discriminator_dict = {
@@ -12,5 +13,6 @@ discriminator_dict = {
 }
 
 encoder_dict = {
-    'default': default.Encoder
+    'default': default.Encoder,
+    'vnet': vnet.VNet_Encoder
 }

@@ -32,7 +32,7 @@ class Logger():
         self.renderer = renderer
 
         self.load_checkpoint()
-        self.write_models()
+        #self.write_models()
         self.write_config()
 
     def write_models(self):

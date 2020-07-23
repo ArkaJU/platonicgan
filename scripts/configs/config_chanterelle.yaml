@@ -22,10 +22,10 @@ models:
     name: default
   encoder:
     n_features_min: 64
-    name: default
+    name: vnet
   generator:
     n_features_min: 64
-    name: default
+    name: vnet
 n_workers: 4
 name: Chanterelle
 renderer:

@@ -14,7 +14,7 @@ def make_dirs(param, root=None):
 
     dirs = Dirs()
     if root is None:
-        dirs.root = "/content/drive/My Drive"
+        dirs.root = "/content/platonicgan"
     else:
         dirs.root = root
 

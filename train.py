@@ -32,13 +32,14 @@ for epoch in range(1, param.training.n_epochs + 1):
         image = image.to(param.device)
         volume = volume.to(param.device)
 
-        if param.task == 'generation':
-            z = utils.generate_z(param, param.training.z_size)
-        else:
-            z = trainer.encoder_train(image)
+        # if param.task == 'generation':
+        #     z = utils.generate_z(param, param.training.z_size)
+        # else:
+        #     z = trainer.encoder_train(image)
+        z_list = trainer.encoder_train(image)
 
-        trainer.generator_train(image, volume, z)
-        trainer.discriminator_train(image, volume, z)
+        trainer.generator_train(image, volume, z_list)
+        trainer.discriminator_train(image, volume, z_list)
 
         trainer.logger.log_checkpoint(trainer.models, trainer.optimizers)
         for model in trainer.models:
