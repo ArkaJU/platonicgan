@@ -39,7 +39,6 @@ class Trainer(object):
                 self.logger = log.Logger(dirs, param, self.renderer, self.transform, self.models, self.optimizers)
                 self.gan_loss = GANLoss(param, param.training.loss)
                 self.criterion_data_term = torch.nn.MSELoss()
-                self.reconstruction_loss = torch.nn.MSELoss()  #new
 
                 self.dirs = dirs
 
@@ -51,9 +50,6 @@ class Trainer(object):
 
     def set_iteration(self, iteration):
         self.iteration = iteration
-    
-    def _compute_reconstruction_loss(self, fake, real):  #new
-        return self.reconstruction_loss(fake, real) 
 
     def _compute_adversarial_loss(self, output, target, weight):
         return self.gan_loss(output, target) * weight

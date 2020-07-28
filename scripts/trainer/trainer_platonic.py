@@ -13,42 +13,78 @@ class TrainerPlatonic(Trainer):
         print("[INFO] setup TrainerPlatonic")
 
         Trainer.__init__(self, param, dirs, test=test, init=init)
+        self.loss_fn = torch.nn.MSELoss()
 
-        self.d_optimizer = None
+    def get_graphics_grid_coords_3d(self, z_size, y_size, x_size, coord_dim=-1):
+        steps_x = torch.linspace(-1.0, 1.0, x_size)
+        steps_y = torch.linspace(1.0, -1.0, y_size)
+        steps_z = torch.linspace(1.0, -1.0, z_size)
+        z, y, x = torch.meshgrid(steps_z, steps_y, steps_x)
+        coords = torch.stack([x, y, z], dim=coord_dim)
+        return coords
 
-        # if init:
-        #     self.discriminator = self.discriminator_2d
-        #     if not test:
-        #         self.d_optimizer = self.d_optimizer_2d
+    def resample(self, volume, indices_rotated):
 
-    def process_views(self, volume, image_real):
+        if volume.is_cuda:
+            indices_rotated = indices_rotated.to('cuda')
 
-        fakes = []
+        indices_rotated = indices_rotated.permute(0, 2, 3, 4, 1)
+
+        # transform coordinate system
+        # flip y and z
+        # grid sample expects y- to be up and z- to be front
+        indices_rotated[..., 1] = -indices_rotated[..., 1]
+        indices_rotated[..., 2] = -indices_rotated[..., 2]
+        volume = torch.nn.functional.grid_sample(volume, indices_rotated, mode='bilinear')
+        #print(f"Volume_resampled: {volume.shape}")
+        return volume
+
+    def rotate(self, volume, rotation_matrix):
+
+        batch_size = volume.shape[0]
+        size = volume.shape[2]
+        #print(f"batch_size: {batch_size}")
+        #print(f"size: {size}")
+        indices = self.get_graphics_grid_coords_3d(size, size, size, coord_dim=0)
+        #print(f"indices before: {indices.shape}")
+        indices = indices.expand(batch_size, 3, size, size, size)
+        #print(f"indices after: {indices.shape}")
+        indices = indices.to(self.param.device)
+
+        indices_rotated = torch.bmm(rotation_matrix, indices.view(batch_size, 3, -1)).view(batch_size, 3, size, size, size)
+        #print(f"indices_rotated: {indices_rotated.shape}")
+        return self.resample(volume, indices_rotated)
+    
+    def get_front_projection(self, rotated_volume):
+        raise NotImplementedError
+
+    def _compute_reconstruction_loss(self, fake, real): 
+        print(f"real: {real.shape}")
+        print(f"fake: {fake.shape}")
+        return self.loss_fn(fake, real) 
+
+    def process_views(self, volume, rotation_matrices, images):
+
         losses = []
-
-        n_views = 5
-
-        #need to ensure the correspondence
-        if n_views==5:
-          rotation_angles = [-np.pi/2, -np.pi/4, 0, np.pi/4, np.pi/2]   #in radians
-
-        elif n_views==3:
-          rotation_angles = [-np.pi/2,  0,  np.pi/2]   #in radians
+        n_views = rotation_matrices.shape[1]
 
         for idx in range(n_views):
-          #not implemented yet
-          rotation_angle = rotation_angles[idx]
-          real = image_real[idx]
-          fake = self.renderer.render(self.transform.rotate_by_angle(volume, rotation_angle))
-          
+          real = images[:, idx:idx+4, :, :] #(B, 4, 64, 64)
+
+          #rotation_matrix = rotation_matrices[:, idx, :, :]
+          rotation_matrix = torch.rand((2, 3, 3), dtype=torch.float)
+          rotation_matrix = rotation_matrix.to(self.param.device)
+          #print(f"rotation_matrix: {rotation_matrix.shape}")
+          rotated_volume = self.rotate(volume, rotation_matrix)
+
+          fake = self.renderer.render(rotated_volume) #(B, 4, 64, 64)
+          #fake = self.get_front_projection(rotated_volume) 
           loss = self._compute_reconstruction_loss(fake, real)
 
           self.logger.log_images('{}_{}'.format('view_output', idx), fake)
-
-          fakes.append(fake)
           losses.append(loss)
 
-        return fakes, losses
+        return losses
 
     def generator_train(self, images, z):
         self.generator.train()
@@ -56,10 +92,12 @@ class TrainerPlatonic(Trainer):
 
         data_loss = torch.tensor(0.0).to(self.param.device)
 
-        fake_volume = self.generator(z)
-        print(images.shape)
-    
-        fakes, losses = self.process_views(fake_volume, images)
+        #fake_volume, rotation_matrices = self.generator(z)  #fake_volume->[B, 4, L, W, H], rotation_matrices->[B, 5, 3, 3]
+        fake_volume = torch.rand((2, 3, 64, 64, 64), dtype=torch.float)
+        fake_volume = fake_volume.to(self.param.device)
+        #print(f"fake_volume: {fake_volume.shape}")
+        rotation_matrices = torch.rand((2, 5, 3, 3), dtype=torch.float)
+        losses = self.process_views(fake_volume, rotation_matrices, images)
 
         g_loss = torch.mean(torch.stack(losses))
 

@@ -22,8 +22,11 @@ class EmissionAbsorptionRenderer():
 
     def render(self, volume, axis=2):
         padding = 1
+        #print(f"inside render before volume: {volume.shape}")
+        #print(f"volume: {volume.device}")
         volume = torch.nn.functional.pad(volume, (padding, padding, padding, padding, padding, padding))
-
+        #print(f"inside render after volume: {volume.shape}")
+        #print(f"volume: {volume.device}")
         density = volume[:, [3]]
         signal = volume[:, :3]
 

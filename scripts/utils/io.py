@@ -36,17 +36,20 @@ def read_image(image_path, resolution=None):
     # load image
 
     image = cv2.imread(image_path, 0)
+    ret, thr = cv2.threshold(image.astype(np.uint8), 0, 255, cv2.THRESH_OTSU)
     image = utils.normalize(image)
     #print(f'image.ndim: {image.ndim}')
-
-    assert image.ndim == 2  #grayscale
+    image = image[:, :, np.newaxis]
+    image = np.repeat(image, 3, 2)
+    image = np.dstack([image, thr])
+    assert image.ndim == 3  #repeated grayscale
 
     # for channel in range(image.shape[2]):
     #     image[..., channel] = ndimage.filters.gaussian_filter(image[..., channel], 1, truncate=2.0)
 
     if resolution is not None:
         image = cv2.resize(image, (resolution, resolution), cv2.INTER_CUBIC).astype(np.float32)
-
+    image = np.transpose(image, (2, 0, 1))
     return image
 
 

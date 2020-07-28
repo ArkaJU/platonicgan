@@ -30,11 +30,11 @@ for epoch in range(1, param.training.n_epochs + 1):
           print("[iter {} name: {} mode: {} IF: {}]".format(trainer.logger.iteration, param.name, param.mode, param.renderer.type))
         print(f'train: {idx}')
         images = images.to(param.device)
-        volume = volume.to(param.device)
-        
+        print(images.shape)
         z = trainer.encoder_train(images)
         print("#"*100)
         trainer.generator_train(images, z)
+        #trainer.generator_train(images)
         print("$"*100)
         # trainer.discriminator_train(image, volume, z)
         # print("%"*100)
