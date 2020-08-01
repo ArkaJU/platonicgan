@@ -37,7 +37,10 @@ def read_image(image_path, resolution=None):
 
     image = cv2.imread(image_path, 0)
     ret, thr = cv2.threshold(image.astype(np.uint8), 0, 255, cv2.THRESH_OTSU)
+    
     image = utils.normalize(image)
+    thr = thr//255
+    image = image*thr
     #print(f'image.ndim: {image.ndim}')
     image = image[:, :, np.newaxis]
     image = np.repeat(image, 3, 2)

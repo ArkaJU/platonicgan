@@ -72,7 +72,18 @@ class TrainerPlatonic(Trainer):
 
           self.logger.log_images('{}_{}'.format('view_output', idx), fake)
           losses.append(loss)
+        
 
+        # x = np.array([[0.866, 0, 0.5],
+        #               [0,     1,  0 ], 
+        #               [-0.5,  0,  0.866]])
+        # x = x[np.newaxis, :, :]
+
+        # rotation_matrix = torch.Tensor(np.repeat(x, 2, 0)).to('cuda') #(2, 64, 64)
+        # rotated_volume = self.rotate(volume, rotation_matrix)
+        # fake = self.renderer.render(rotated_volume) #(2, 4, 64, 64)
+        
+        # self.logger.log_images('{}_{}'.format('test_output', 333), fake)
         return losses
 
     def generator_train(self, images, z):
@@ -82,7 +93,7 @@ class TrainerPlatonic(Trainer):
         data_loss = torch.tensor(0.0).to(self.param.device)
 
         fake_volume, rotation_matrices = self.generator(z)  #fake_volume->[B, 4, size, size, size], rotation_matrices->[B, 5, 3, 3]
-
+        torch.save(rotation_matrices, '/content/rotation_matrices.pt')
         losses = self.process_views(fake_volume, rotation_matrices, images)
         g_loss = torch.mean(torch.stack(losses))
 
@@ -93,7 +104,7 @@ class TrainerPlatonic(Trainer):
         self.logger.log_scalar('g_2d_loss', g_loss.item())
         #self.logger.log_scalar('g_2d_rec_loss', data_loss.item())
         self.logger.log_volumes('volume', fake_volume)
-
+        
         #print(f"images.shape: {images.shape}")
         for i in range(images.shape[1]//4):
           #print(f"images[:, i:i+4, :, :].shape: {images[:, i:i+4, :, :].shape}")
