@@ -92,7 +92,7 @@ def load_config(config_path='scripts/configs/default_config.yaml'):
     if param.device == 'cuda' and not torch.cuda.is_available():
         raise Exception('No GPU found, please use "cpu" as device')
 
-    print('[INFO] Use {} {} device ({} devices are available)'.format(param.device, torch.cuda.current_device(), torch.cuda.device_count()))
+    #print('[INFO] Use {} {} device ({} devices are available)'.format(param.device, torch.cuda.current_device(), torch.cuda.device_count()))
     print('[INFO] Use pytorch {}'.format(torch.__version__))
 
     return param

@@ -24,16 +24,33 @@ class Generator(nn.Module):
         self.bn4 = nn.BatchNorm3d(self.n_features_min * 1)
         self.conv5 = nn.ConvTranspose3d(self.n_features_min * 1, self.n_channel, 4, 2, 1, bias=False)
 
+        self.conv1_b = nn.Conv3d(64, 1, 1, 1, 0)
+        self.bn1_b = nn.BatchNorm3d(1)
+        self.conv2_b = nn.Conv2d(32, 5, 2, 2, 0)
+        self.bn2_b = nn.BatchNorm2d(5)
+        self.conv3_b = nn.Conv2d(5, 5, 2, 2, 0)
+        self.bn3_b = nn.BatchNorm2d(5)
+        self.conv4_b = nn.Conv2d(5, 5, 3, 2, 0)
+        self.bn4_b = nn.BatchNorm2d(5)
+    
     def forward(self, input):
         x = input.view(input.size(0), self.z_size, 1, 1, 1)
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         x = F.relu(self.bn4(self.conv4(x)))
+        
+        x_b = F.relu(self.bn1_b(self.conv1_b(x)))
+        x_b = x_b.squeeze(1)
+        x_b = F.relu(self.bn2_b(self.conv2_b(x_b)))
+        x_b = F.relu(self.bn3_b(self.conv3_b(x_b)))
+        x_b = F.relu(self.bn4_b(self.conv4_b(x_b)))
+        x_b = torch.sigmoid(x_b)
+
         x = self.conv5(x)
         x = torch.sigmoid(x)
 
-        return x
+        return x, x_b
 
 
 class Discriminator(nn.Module):

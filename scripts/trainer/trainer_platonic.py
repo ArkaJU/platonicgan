@@ -43,24 +43,17 @@ class TrainerPlatonic(Trainer):
 
         batch_size = volume.shape[0]
         size = volume.shape[2]
-        #print(f"batch_size: {batch_size}")
-        #print(f"size: {size}")
         indices = self.get_graphics_grid_coords_3d(size, size, size, coord_dim=0)
-        #print(f"indices before: {indices.shape}")
         indices = indices.expand(batch_size, 3, size, size, size)
-        #print(f"indices after: {indices.shape}")
         indices = indices.to(self.param.device)
 
         indices_rotated = torch.bmm(rotation_matrix, indices.view(batch_size, 3, -1)).view(batch_size, 3, size, size, size)
-        #print(f"indices_rotated: {indices_rotated.shape}")
         return self.resample(volume, indices_rotated)
     
     def get_front_projection(self, rotated_volume):
         raise NotImplementedError
 
     def _compute_reconstruction_loss(self, fake, real): 
-        print(f"real: {real.shape}")
-        print(f"fake: {fake.shape}")
         return self.loss_fn(fake, real) 
 
     def process_views(self, volume, rotation_matrices, images):
@@ -69,16 +62,12 @@ class TrainerPlatonic(Trainer):
         n_views = rotation_matrices.shape[1]
 
         for idx in range(n_views):
-          real = images[:, idx:idx+4, :, :] #(B, 4, 64, 64)
 
-          #rotation_matrix = rotation_matrices[:, idx, :, :]
-          rotation_matrix = torch.rand((2, 3, 3), dtype=torch.float)
-          rotation_matrix = rotation_matrix.to(self.param.device)
-          #print(f"rotation_matrix: {rotation_matrix.shape}")
+          rotation_matrix = rotation_matrices[:, idx, :, :] #(B, 3, 3)
           rotated_volume = self.rotate(volume, rotation_matrix)
 
+          real = images[:, idx*4:(idx+1)*4, :, :] #(B, 4, 64, 64)
           fake = self.renderer.render(rotated_volume) #(B, 4, 64, 64)
-          #fake = self.get_front_projection(rotated_volume) 
           loss = self._compute_reconstruction_loss(fake, real)
 
           self.logger.log_images('{}_{}'.format('view_output', idx), fake)
@@ -92,26 +81,23 @@ class TrainerPlatonic(Trainer):
 
         data_loss = torch.tensor(0.0).to(self.param.device)
 
-        #fake_volume, rotation_matrices = self.generator(z)  #fake_volume->[B, 4, L, W, H], rotation_matrices->[B, 5, 3, 3]
-        fake_volume = torch.rand((2, 3, 64, 64, 64), dtype=torch.float)
-        fake_volume = fake_volume.to(self.param.device)
-        #print(f"fake_volume: {fake_volume.shape}")
-        rotation_matrices = torch.rand((2, 5, 3, 3), dtype=torch.float)
-        losses = self.process_views(fake_volume, rotation_matrices, images)
+        fake_volume, rotation_matrices = self.generator(z)  #fake_volume->[B, 4, size, size, size], rotation_matrices->[B, 5, 3, 3]
 
+        losses = self.process_views(fake_volume, rotation_matrices, images)
         g_loss = torch.mean(torch.stack(losses))
 
         g_loss.backward()
         self.g_optimizer.step()
 
         ### log
-        #print("  Generator loss 2d: {:2.4}".format(g_loss))
         self.logger.log_scalar('g_2d_loss', g_loss.item())
         #self.logger.log_scalar('g_2d_rec_loss', data_loss.item())
         self.logger.log_volumes('volume', fake_volume)
 
-        for i in range(len(images)):
-          self.logger.log_images(f'image_input_{i}', images[i])
+        #print(f"images.shape: {images.shape}")
+        for i in range(images.shape[1]//4):
+          #print(f"images[:, i:i+4, :, :].shape: {images[:, i:i+4, :, :].shape}")
+          self.logger.log_images(f'image_input_{i}', images[:, i*4:(i+1)*4, :, :])
 
     def discriminator_train(self, image, volume, z):
         self.discriminator.train()

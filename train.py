@@ -24,18 +24,19 @@ print('[Training] training start:')
 
 for epoch in range(1, param.training.n_epochs + 1):
     start_time = time.time()
-
+    if (epoch+1)%50==0:
+      print(f'Epoch: {epoch}')
     for idx, (images, object_id) in enumerate(trainer.datal_loader_train):
         if trainer.logger.iteration%50==0:
           print("[iter {} name: {} mode: {} IF: {}]".format(trainer.logger.iteration, param.name, param.mode, param.renderer.type))
-        print(f'train: {idx}')
+        #print(f'train: {idx}')
         images = images.to(param.device)
-        print(images.shape)
-        z = trainer.encoder_train(images)
-        print("#"*100)
+        #print(images.shape)                 #(B, 20, 64, 64)
+        z = trainer.encoder_train(images)    #(B, 200)
+        #print(z.shape) 
+        #print("#"*100)
         trainer.generator_train(images, z)
-        #trainer.generator_train(images)
-        print("$"*100)
+        #print("$"*100)
         # trainer.discriminator_train(image, volume, z)
         # print("%"*100)
         trainer.logger.log_checkpoint(trainer.models, trainer.optimizers)
@@ -43,6 +44,4 @@ for epoch in range(1, param.training.n_epochs + 1):
             trainer.logger.log_gradients(model)
 
         trainer.logger.step()
-        print("^"*100)
-        print()
 print('Training finished!...')
