@@ -14,26 +14,15 @@ def make_dirs(param, root=None):
 
     dirs = Dirs()
     if root is None:
-        dirs.root = "/content/drive/My Drive"
+        dirs.root = "/content/drive/My Drive/"
     else:
         dirs.root = root
 
-    run_name = '{}_{}_{}_{}_{}_{}_g2d{}_g3d{}_rec2d{}_rec3d{}_n_views{}_lr_g{}_lr_d{}_bs{}_{}'.format(
-        param.job_id,
+    run_name = '{}_batch_size{}_d_thresh{}_{}'.format(
         param.name,
-        param.mode,
-        param.task,
-        '_'.join(str(e) for e in param.data.use_classes),
-        param.renderer.type,
-        param.training.adversarial_term_lambda_2d,
-        param.training.adversarial_term_lambda_3d,
-        param.training.data_term_lambda_2d,
-        param.training.data_term_lambda_3d,
-        param.training.n_views,
-        param.training.lr_g,
-        param.training.lr_d,
         param.training.batch_size,
-        param.training.view_sampling,
+        param.training.d_thresh,
+        param.renderer.type
     )
 
     dirs.output = '{}/output/{}'.format(dirs.root, run_name)
@@ -79,7 +68,7 @@ def load_config(config_path='scripts/configs/default_config.yaml'):
         config['data']['n_channel_out_3d'] = 4
         config['data']['n_channel_out_2d'] = 4
     if config['renderer']['type'] == 'absorption_only' or config['renderer']['type'] == 'visual_hull':
-        config['data']['n_channel_in'] = 1
+        config['data']['n_channel_in'] = 5    #changed
         config['data']['n_channel_out_3d'] = 1
         config['data']['n_channel_out_2d'] = 1
 

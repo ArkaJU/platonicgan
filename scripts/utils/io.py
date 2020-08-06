@@ -5,6 +5,7 @@ from scripts.utils.utils import nth_root, normalize
 import scripts.utils.utils as utils
 import torch
 import math
+from scipy.io import loadmat
 from scipy import ndimage
 import os
 
@@ -35,20 +36,19 @@ def volume_to_raw(volume, path, name, save_info=True):
 def read_image(image_path, resolution=None):
     # load image
 
-    image = cv2.imread(image_path, 0)
-    ret, thr = cv2.threshold(image.astype(np.uint8), 0, 255, cv2.THRESH_OTSU)
-    
+    #image = cv2.imread(image_path, 0)
+    image = loadmat(image_path)['Frame']
     image = utils.normalize(image)
+    ret, thr = cv2.threshold(np.uint8(image*255), 0, 255, cv2.THRESH_OTSU)
+    #print(thr.max())
     thr = thr//255
-    image = image*thr
-    #print(f'image.ndim: {image.ndim}')
     image = image[:, :, np.newaxis]
-    image = np.repeat(image, 3, 2)
+    image = np.repeat(image, repeats=3, axis=2)
     image = np.dstack([image, thr])
+    
+    #print(f'image.ndim: {image.ndim}')
+    
     assert image.ndim == 3  #repeated grayscale
-
-    # for channel in range(image.shape[2]):
-    #     image[..., channel] = ndimage.filters.gaussian_filter(image[..., channel], 1, truncate=2.0)
 
     if resolution is not None:
         image = cv2.resize(image, (resolution, resolution), cv2.INTER_CUBIC).astype(np.float32)

@@ -1,6 +1,6 @@
 data:
   cube_len: 64
-  name: custom # custom | image | ucb
+  name: custom 
   path_dir: datasets/thermal_folderwise
   use_classes: ['thermal']
   use_n_samples_2d: -1
@@ -15,7 +15,7 @@ logger:
   log_slices: True
   num_examples: 10
   save_checkpoint: True
-mode: platonic # platonic | platonic_3D | 3D
+mode: platonic 
 task: reconstruction
 models:
   discriminator:
@@ -31,13 +31,13 @@ n_workers: 4
 name: Thermal
 renderer:
   absorption_factor: 20.0
-  type: emission_absorption # absorption_only | emission_absorption | visual_hull
+  type: absorption_only # absorption_only | emission_absorption | visual_hull
 tests:
   activate: true
 training:
   adversarial_term_lambda_2d: 1.0
   adversarial_term_lambda_3d: 0.0
-  batch_size: 2
+  batch_size: 4
   d_thresh: 0.6
   data_term_lambda_2d: 8.0
   data_term_lambda_3d: 0.0

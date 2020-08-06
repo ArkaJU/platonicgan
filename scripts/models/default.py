@@ -73,19 +73,19 @@ class Discriminator(nn.Module):
         return nn.Conv2d(n_features_in, n_features_out, kernel, stride, padding), nn.BatchNorm2d(n_features_out)
 
     def forward(self, input):
-        print(input.shape)
+        #print(input.shape)
         x_f1 = F.leaky_relu(self.bn1(self.conv1(input)), 0.2)
-        print(x_f1.shape)
+        #print(x_f1.shape)
         x = F.leaky_relu(self.bn2(self.conv2(x_f1)), 0.2)
-        print(x.shape)
+        #print(x.shape)
         x = F.leaky_relu(self.bn3(self.conv3(x)), 0.2)
-        print(x.shape)
+        #print(x.shape)
         x_f2 = F.leaky_relu(self.bn4(self.conv4(x)), 0.2)
-        print(x_f2.shape)
+        #print(x_f2.shape)
         x = self.conv5(x_f2)
-        print(x.shape)
+        #print(x.shape)
 
-        return x, [x_f1, x_f2]
+        return x
 
 
 class Discriminator3d(nn.Module):
