@@ -136,6 +136,14 @@ class Logger():
 
             torch.save(checkpoint, '{}/checkpoint.pkl'.format(self.path_stats))
 
+    def log_graph(self, model, ip):
+        if self.logging_files:
+
+            ip = ip.clone()
+            ip = ip.detach()
+            #print(type(model))
+            self.writer.add_graph(model, ip)
+            
     def log_images(self, tag, images):
         if self.logging_files:
 

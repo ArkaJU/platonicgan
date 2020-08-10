@@ -31,7 +31,7 @@ class Generator(nn.Module):
         self.conv3_b = nn.Conv2d(5, 5, 2, 2, 0)
         self.bn3_b = nn.BatchNorm2d(5)
         self.conv4_b = nn.Conv2d(5, 5, 3, 2, 0)
-        self.bn4_b = nn.BatchNorm2d(5)
+        #self.bn4_b = nn.BatchNorm2d(5)
     
     def forward(self, input):
         x = input.view(input.size(0), self.z_size, 1, 1, 1)
@@ -44,7 +44,7 @@ class Generator(nn.Module):
         x_b = x_b.squeeze(1)
         x_b = F.relu(self.bn2_b(self.conv2_b(x_b)))
         x_b = F.relu(self.bn3_b(self.conv3_b(x_b)))
-        x_b = F.relu(self.bn4_b(self.conv4_b(x_b)))
+        x_b = self.conv4_b(x_b)
         x_b = torch.sigmoid(x_b)
 
         x = self.conv5(x)

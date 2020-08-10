@@ -4,6 +4,7 @@ import torch.utils.data.distributed
 from torch import autograd
 import numpy as np
 from scripts.trainer.trainer import Trainer
+from scripts.utils.io import volume_to_raw
 import torch.nn as nn
 import torchvision.models as models
 
@@ -130,11 +131,15 @@ class TrainerPlatonic(Trainer):
         self.g_optimizer.step()
 
         ### log
+        self.logger.log_graph(self.generator, z)
         self.logger.log_scalar('g_loss', g_loss.item())
         self.logger.log_scalar('g_rec_loss', losses_rec.item())
         self.logger.log_scalar('g_adv_loss', losses_adv.item())
         self.logger.log_volumes('volume', fake_volume)
-        
+        #print(fake_volume[0].shape)
+        #volume_to_raw(fake_volume[0].permute(3,2,1,0).detach().cpu().clone().numpy(), path='/content', name='fake_volume')
+        np.save('/content/volume.npy', fake_volume[0].permute(3,2,1,0).detach().cpu().clone().numpy())
+
         if self.param.renderer.type == 'visual_hull' or self.param.renderer.type == 'absorption_only':
           for i in range(images.shape[1]):
             self.logger.log_images(f'{i}_image_input', images[:, i, :, :].unsqueeze(1))
@@ -193,7 +198,7 @@ class TrainerPlatonic(Trainer):
             #print("  *Discriminator 2d update*")
 
         ### log
-        #print("  Discriminator2d loss: {:2.4}".format(d_loss))
+        self.logger.log_graph(self.discriminator, real)
         self.logger.log_scalar('d_loss', d_loss.item())
         self.logger.log_scalar('d_loss_real', d_real_loss.item())
         self.logger.log_scalar('d_loss_fake', d_fake_loss.item())
